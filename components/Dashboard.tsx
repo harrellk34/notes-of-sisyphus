@@ -1,27 +1,23 @@
-import { useMemo, useState, useSyncExternalStore } from "react";
-import { ActivityForm } from "@/components/ActivityForm";
-import { DailyLogPanel } from "@/components/DailyLogPanel";
+import { useEffect, useState } from "react";
+import { DailyLogForm } from "@/components/DailyLogForm";
+import { DailyLogSummary } from "@/components/DailyLogSummary";
 import { StatCard } from "@/components/StatCard";
 import {
-  getDailyLogSnapshot,
-  getDailyLogStorageKey,
-  getDashboardSnapshot,
-  getDashboardStorageKey,
-  getJournalSnapshot,
+  getDashboardData,
+  getJournalEntry,
+  getTodayLog,
+  saveTodayLog,
+  subscribeToFakeBackend,
+} from "@/lib/fakeBackend";
+import {
+  createDefaultDailyLog,
   getJournalWordCount,
-  getServerDailyLogSnapshot,
-  getServerDashboardSnapshot,
-  getServerJournalSnapshot,
-  getTodayJournalStorageKey,
   getTodayKey,
-  parseDailyLog,
-  parseDashboardData,
-  setDailyLog,
-  subscribeToDashboard,
 } from "@/lib/storage";
 import type { AppView, AuthSubmitHandler, DailyLog, User } from "@/lib/types";
 import {
   calculateDailyStatEstimatesWithJournal,
+  createEmptyStatXp,
   estimateJournalInsightXp,
   getStatProgress,
   statDefinitions,
@@ -34,33 +30,13 @@ type DashboardProps = {
 
 export function Dashboard({ onViewChange, user }: DashboardProps) {
   const today = getTodayKey();
-  const dashboardStorageKey = getDashboardStorageKey(user.email);
-  const dailyLogStorageKey = getDailyLogStorageKey(user.email, today);
-  const journalStorageKey = getTodayJournalStorageKey(user.email, today);
-  const dashboardSnapshot = useSyncExternalStore(
-    subscribeToDashboard,
-    () => getDashboardSnapshot(dashboardStorageKey),
-    getServerDashboardSnapshot,
+  const [dashboardData, setDashboardData] = useState(() => ({
+    statXp: createEmptyStatXp(),
+  }));
+  const [dailyLog, setDailyLogDraft] = useState<DailyLog>(() =>
+    createDefaultDailyLog(today),
   );
-  const dailyLogSnapshot = useSyncExternalStore(
-    subscribeToDashboard,
-    () => getDailyLogSnapshot(dailyLogStorageKey),
-    getServerDailyLogSnapshot,
-  );
-  const journalText = useSyncExternalStore(
-    subscribeToDashboard,
-    () => getJournalSnapshot(journalStorageKey),
-    getServerJournalSnapshot,
-  );
-  const dashboardData = useMemo(
-    () => parseDashboardData(dashboardSnapshot),
-    [dashboardSnapshot],
-  );
-  const savedDailyLog = useMemo(
-    () => parseDailyLog(dailyLogSnapshot, today),
-    [dailyLogSnapshot, today],
-  );
-  const [dailyLog, setDailyLogDraft] = useState<DailyLog>(savedDailyLog);
+  const [journalText, setJournalText] = useState("");
   const journalWordCount = getJournalWordCount(journalText);
   const estimates = calculateDailyStatEstimatesWithJournal(
     dailyLog,
@@ -71,9 +47,41 @@ export function Dashboard({ onViewChange, user }: DashboardProps) {
     estimates.modifier,
   );
 
-  function handleDailySubmit(event: AuthSubmitHandler) {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboard() {
+      const [nextDashboardData, nextDailyLog, nextJournalEntry] =
+        await Promise.all([
+          getDashboardData(user.id),
+          getTodayLog(user.id),
+          getJournalEntry(user.id, today),
+        ]);
+
+      if (!isMounted) {
+        return;
+      }
+
+      setDashboardData(nextDashboardData);
+      setDailyLogDraft(nextDailyLog);
+      setJournalText(nextJournalEntry.text);
+    }
+
+    void loadDashboard();
+
+    const unsubscribe = subscribeToFakeBackend(() => {
+      void loadDashboard();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [today, user.id]);
+
+  async function handleDailySubmit(event: AuthSubmitHandler) {
     event.preventDefault();
-    setDailyLog(dailyLogStorageKey, dailyLog);
+    await saveTodayLog(user.id, dailyLog);
   }
 
   return (
@@ -144,14 +152,14 @@ export function Dashboard({ onViewChange, user }: DashboardProps) {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <ActivityForm
+        <DailyLogForm
           dailyLog={dailyLog}
           estimates={estimates}
           onDailyLogChange={setDailyLogDraft}
           onSubmit={handleDailySubmit}
           onWriteJournal={() => onViewChange("journal")}
         />
-        <DailyLogPanel dailyLog={dailyLog} estimates={estimates} />
+        <DailyLogSummary dailyLog={dailyLog} estimates={estimates} />
       </section>
     </div>
   );

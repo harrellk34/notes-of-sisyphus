@@ -11,6 +11,7 @@ export type AppView =
   | "settings";
 
 export type User = {
+  id: string;
   name: string;
   email: string;
 };
@@ -23,19 +24,10 @@ export type CoreStatName =
   | "willpower"
   | "insight";
 
-export type StatName = CoreStatName;
-
 export type DailyActivityType =
   | "lifting"
   | "cardio"
   | "stretching";
-
-export type ActivityType =
-  | DailyActivityType
-  | "journaling"
-  | "diet"
-  | "sleep"
-  | "rest";
 
 export type DailyActivityEntry = {
   completed: boolean;
@@ -48,11 +40,6 @@ export type DailyLog = {
   dietRating: number;
   sleepRating: number;
   notes: string;
-};
-
-export type JournalEntry = {
-  date: string;
-  text: string;
 };
 
 export type RecoveryStatus =
@@ -88,15 +75,25 @@ export type StatXpEstimate = {
   modifier: XPModifier;
 };
 
-export type ActivityLog = {
-  id: string;
-  activityType: DailyActivityType;
-  effortRating: number;
-  notes: string;
-  statXp: Record<CoreStatName, number>;
-  multiplier: number;
+export type DailyHistoryEntry = {
+  date: string;
+  dailyLog: DailyLog;
+  estimatedXp: Record<CoreStatName, number>;
   fatigueChange: number;
-  createdAt: string;
+  journalWordCount: number;
+  recoveryScore: number;
+  xpMultiplier: number;
+};
+
+export type JournalEntry = {
+  date: string;
+  text: string;
+  wordCount: number;
+};
+
+export type StatHistoryEntry = {
+  date: string;
+  statXp: Record<CoreStatName, number>;
 };
 
 export type StatProgress = {
@@ -110,7 +107,14 @@ export type StatProgress = {
 
 export type DashboardData = {
   statXp: Record<CoreStatName, number>;
-  activities: ActivityLog[];
+};
+
+export type UserSettings = {
+  dashboardDensity: "comfortable" | "compact";
+  fontSize: "normal" | "large";
+  reducedMotion: boolean;
+  theme: "dark" | "light";
+  xpDisplay: "total" | "level";
 };
 
 export type AuthSubmitHandler = FormEvent<HTMLFormElement>;

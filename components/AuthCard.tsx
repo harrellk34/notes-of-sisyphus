@@ -109,7 +109,8 @@ export function AuthCard({
       </form>
 
       <p className="mt-5 text-sm leading-6 text-zinc-500">
-        This is a local prototype login. No password is sent anywhere or saved.
+        This is a local prototype login. Passwords stay in the fake local
+        backend only.
       </p>
     </section>
   );

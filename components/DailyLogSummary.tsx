@@ -5,12 +5,15 @@ import {
   statDefinitions,
 } from "@/lib/xp";
 
-type DailyLogPanelProps = {
+type DailyLogSummaryProps = {
   dailyLog: DailyLog;
   estimates: StatXpEstimate;
 };
 
-export function DailyLogPanel({ dailyLog, estimates }: DailyLogPanelProps) {
+export function DailyLogSummary({
+  dailyLog,
+  estimates,
+}: DailyLogSummaryProps) {
   return (
     <section className="rounded-lg border border-white/10 bg-zinc-900/70 p-6">
       <div className="border-b border-white/10 pb-5">
@@ -96,11 +99,6 @@ export function DailyLogPanel({ dailyLog, estimates }: DailyLogPanelProps) {
         shaping Vitality, recovery, and the XP multiplier. Journaling is still a
         rating input for now.
       </div>
-
-      <p className="mt-4 text-xs uppercase tracking-[0.18em] text-zinc-600">
-        TODO: Future graph pages should cover consistency by activity, activity
-        history, stat progress, and overall progression.
-      </p>
     </section>
   );
 }

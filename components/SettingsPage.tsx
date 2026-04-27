@@ -1,4 +1,12 @@
-const settings = [
+import { useEffect, useState } from "react";
+import {
+  getUserSettings,
+  saveUserSettings,
+  subscribeToFakeBackend,
+} from "@/lib/fakeBackend";
+import type { User, UserSettings } from "@/lib/types";
+
+const settingRows = [
   "Font size",
   "Light/dark mode",
   "Reduced motion",
@@ -6,7 +14,45 @@ const settings = [
   "XP display preferences",
 ];
 
-export function SettingsPage() {
+const defaultSettings: UserSettings = {
+  dashboardDensity: "comfortable",
+  fontSize: "normal",
+  reducedMotion: false,
+  theme: "dark",
+  xpDisplay: "total",
+};
+
+export function SettingsPage({ user }: { user: User }) {
+  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSettings() {
+      const nextSettings = await getUserSettings(user.id);
+
+      if (isMounted) {
+        setSettings(nextSettings);
+      }
+    }
+
+    void loadSettings();
+
+    const unsubscribe = subscribeToFakeBackend(() => {
+      void loadSettings();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [user.id]);
+
+  function updateSettings(nextSettings: UserSettings) {
+    setSettings(nextSettings);
+    void saveUserSettings(user.id, nextSettings);
+  }
+
   return (
     <section className="rounded-lg border border-white/10 bg-black/35 p-6 shadow-2xl shadow-black/30 backdrop-blur">
       <div className="border-b border-white/10 pb-5">
@@ -19,7 +65,7 @@ export function SettingsPage() {
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {settings.map((setting) => (
+        {settingRows.map((setting) => (
           <label
             className="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-zinc-900/80 p-5"
             key={setting}
@@ -30,10 +76,71 @@ export function SettingsPage() {
                 Placeholder setting
               </span>
             </span>
-            <input className="h-4 w-4 accent-amber-200" type="checkbox" />
+            <input
+              checked={getSettingChecked(setting, settings)}
+              className="h-4 w-4 accent-amber-200"
+              onChange={() => updateSettings(toggleSetting(setting, settings))}
+              type="checkbox"
+            />
           </label>
         ))}
       </div>
     </section>
   );
+}
+
+function getSettingChecked(setting: string, settings: UserSettings) {
+  if (setting === "Font size") {
+    return settings.fontSize === "large";
+  }
+
+  if (setting === "Light/dark mode") {
+    return settings.theme === "light";
+  }
+
+  if (setting === "Reduced motion") {
+    return settings.reducedMotion;
+  }
+
+  if (setting === "Dashboard density") {
+    return settings.dashboardDensity === "compact";
+  }
+
+  return settings.xpDisplay === "level";
+}
+
+function toggleSetting(setting: string, settings: UserSettings): UserSettings {
+  if (setting === "Font size") {
+    return {
+      ...settings,
+      fontSize: settings.fontSize === "normal" ? "large" : "normal",
+    };
+  }
+
+  if (setting === "Light/dark mode") {
+    return {
+      ...settings,
+      theme: settings.theme === "dark" ? "light" : "dark",
+    };
+  }
+
+  if (setting === "Reduced motion") {
+    return {
+      ...settings,
+      reducedMotion: !settings.reducedMotion,
+    };
+  }
+
+  if (setting === "Dashboard density") {
+    return {
+      ...settings,
+      dashboardDensity:
+        settings.dashboardDensity === "comfortable" ? "compact" : "comfortable",
+    };
+  }
+
+  return {
+    ...settings,
+    xpDisplay: settings.xpDisplay === "total" ? "level" : "total",
+  };
 }

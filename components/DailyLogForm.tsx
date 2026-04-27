@@ -11,21 +11,21 @@ import {
   formatActivityType,
 } from "@/lib/xp";
 
-type ActivityFormProps = {
+type DailyLogFormProps = {
   dailyLog: DailyLog;
   estimates: StatXpEstimate;
   onDailyLogChange: (dailyLog: DailyLog) => void;
-  onWriteJournal: () => void;
   onSubmit: (event: AuthSubmitHandler) => void;
+  onWriteJournal: () => void;
 };
 
-export function ActivityForm({
+export function DailyLogForm({
   dailyLog,
   estimates,
   onDailyLogChange,
-  onWriteJournal,
   onSubmit,
-}: ActivityFormProps) {
+  onWriteJournal,
+}: DailyLogFormProps) {
   function updateActivity(
     activityType: DailyActivityType,
     activity: DailyActivityEntry,

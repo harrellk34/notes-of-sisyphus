@@ -78,16 +78,6 @@ export function getXpNeededForLevel(level: number) {
   return Math.round(BASE_XP_PER_LEVEL * level ** XP_LEVEL_EXPONENT);
 }
 
-export function getTotalXpForLevel(level: number) {
-  let totalXp = 0;
-
-  for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
-    totalXp += getXpNeededForLevel(currentLevel);
-  }
-
-  return totalXp;
-}
-
 export function getStatProgress(totalXp: number): StatProgress {
   let level = 1;
   let remainingXp = totalXp;
@@ -185,10 +175,6 @@ export function calculateActivityXp(
   return statXp;
 }
 
-export function calculateDailyStatEstimates(dailyLog: DailyLog): StatXpEstimate {
-  return calculateDailyStatEstimatesWithJournal(dailyLog, 0);
-}
-
 export function calculateDailyStatEstimatesWithJournal(
   dailyLog: DailyLog,
   journalWordCount: number,
@@ -221,22 +207,6 @@ export function calculateDailyStatEstimatesWithJournal(
     modifier,
     statXp,
   };
-}
-
-export function applyDailyActivityToStats(
-  currentStats: Record<CoreStatName, number>,
-  dailyLog: DailyLog,
-) {
-  // TODO: Call this from a future end-of-day confirmation/check-in flow only.
-  const estimates = calculateDailyStatEstimates(dailyLog);
-  const statXp = { ...currentStats };
-
-  statDefinitions.forEach((stat) => {
-    statXp[stat.key] += estimates.statXp[stat.key];
-    statXp[stat.key] = Math.max(0, statXp[stat.key] - estimateDailyDecay(1));
-  });
-
-  return statXp;
 }
 
 export function estimateJournalInsightXp(
@@ -293,8 +263,7 @@ function addJournalXp(
     return;
   }
 
-  // TODO: Later journaling effort should come from the in-app journal system,
-  // likely using word count, completion, and reflection quality signals.
+  // TODO: Expand journal word-count XP with completion and reflection quality signals.
   statXp.insight += insightXp;
   statXp.willpower += Math.max(1, Math.round(WILLPOWER_XP_PER_ACTION * modifier.multiplier));
 }

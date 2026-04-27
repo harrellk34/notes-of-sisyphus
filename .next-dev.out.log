@@ -1,0 +1,13 @@
+
+> notes-of-sisyphus@0.1.0 dev
+> next dev --port 3000
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://169.254.217.71:3000
+✓ Ready in 1038ms
+Creating turbopack project { dir: 'C:\\Users\\kiera\\notes-of-sisyphus', testMode: true }
+
+○ Compiling / ...
+✓ Finished writing to filesystem cache in 24.4s
+[?25h
