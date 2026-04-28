@@ -277,7 +277,7 @@ function addStatXp(
   });
 }
 
-function getRecoveryStatus(change: number): RecoveryStatus {
+export function getRecoveryStatus(change: number): RecoveryStatus {
   if (change <= -0.5) {
     return "recovery-positive";
   }
